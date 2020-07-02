@@ -5,8 +5,8 @@ class preprocesser:
         self.l2l = l2l_file
         self.p2l = p2l_file
         self.outfile = outfile
-        self.location_num = 2388
         self.patient_num = 1017
+        self.location_num = 2388
 
     def get_mappings(self):
         f = open('../data/node_mappings.txt','w',encoding = 'utf-8')
