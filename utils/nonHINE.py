@@ -17,4 +17,6 @@ def n2v():
     model.wv.save_word2vec_format('../data/noneHINE.txt')
 
 if __name__ == '__main__':
-    n2v()
+    # n2v()
+    graph = nx.read_edgelist('../data/edge_nonHINE.txt',delimiter=' ',nodetype=int,data=(('weight',float),))
+    nx.write_gpickle(graph,'../data/covid.pkl')

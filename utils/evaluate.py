@@ -41,6 +41,13 @@ class evaluater:
         f.close()
 
     def load_embedding(self):
+        if 'LINE' in self.emb_file:
+            import pickle
+            f = open(self.emb_file,'rb')
+            self.emb = pickle.load(f)
+            f.close()
+            return
+
         f = open(self.emb_file,'r',encoding='utf-8')
         for line in f:
             line = line.strip().split()
@@ -52,8 +59,7 @@ class evaluater:
             if 'node2vec' in self.emb_file:
                 self.emb[int(line[0])] = list(map(lambda x: float(x),line[1:]))
             else:
-                self.emb[int(line[0][1:])] = list(map(lambda x: float(x),line[1:]))
-                
+                self.emb[int(line[0][1:])] = list(map(lambda x: float(x),line[1:]))     
         f.close()
 
     def compare_similarity(self):
@@ -75,7 +81,8 @@ class evaluater:
         sim_file.close()
 
 if __name__ == '__main__':
-    embs = ['../emb/node2vec.txt','../emb/HIN2vec/node.txt','../emb/Metapath2vec/covid-plp.txt','../emb/HeGAN/covid_dis.emb','../emb/HeGAN/covid_gen.emb']
+    # embs = ['../emb/node2vec.txt','../emb/HIN2vec/node.txt','../emb/Metapath2vec/covid-plp.txt','../emb/HeGAN/covid_dis.emb','../emb/HeGAN/covid_gen.emb']
+    embs = ['../emb/LINE.pkl']
     for emb in embs:
         print('processing '+emb)
         E = evaluater(emb)
