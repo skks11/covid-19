@@ -1,0 +1,12 @@
+../data/train/node2vec.txt
+acc: 0.8719806763285028
+../data/train/LINE.txt
+acc: 0.7951690821256038
+../data/train/metapath2vec.txt
+acc: 0.8033816425120783
+../data/train/HIN2vec.txt
+acc: 0.892270531400967
+../data/train/HeGANdis.txt
+acc: 0.8434782608695663
+../data/train/HeGANgen.txt
+acc: 0.8285024154589372

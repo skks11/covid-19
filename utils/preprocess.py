@@ -78,6 +78,7 @@ class preprocesser:
             import pickle
             f = open(self.emb_file,'rb')
             self.emb = pickle.load(f)
+            # print(len(self.emb[1]))
             f.close()
             return
 
@@ -119,15 +120,21 @@ class preprocesser:
         self.load_embedding()
         self.get_pos()
         self.get_neg()
-        train = []
+        # train = []
+        fout = open(self.outfile,'w',encoding='utf-8')
         for pair in self.positive:
             tmp = []
             pos1,pos2 = pair[0],pair[1]
             sim = self.cosine_similarity(self.emb[pos1],self.emb[pos2])
             tmp.append(sim)
-            tmp = tmp + self.emb[pos1] + self.emb[pos2] + [1]
-            train.append(tmp)
-            # tmp = list(map(lambda x: str(x),tmp))
+            if 'LINE' in self.emb_file:
+                tmp = tmp + self.emb[pos1].tolist() + self.emb[pos2].tolist() + [1]
+            else:
+                tmp = tmp + self.emb[pos1] + self.emb[pos2] + [1]
+            # train.append(tmp)
+            tmp = list(map(lambda x: str(x),tmp))
+            fout.write(' '.join(tmp)+'\n')
+            
         
 
         for pair in self.negtive:
@@ -135,11 +142,17 @@ class preprocesser:
             neg1,neg2 = pair[0],pair[1]
             sim = self.cosine_similarity(self.emb[neg1],self.emb[neg2])
             tmp.append(sim)
-            tmp = tmp + self.emb[neg1] + self.emb[neg2] + [0]
-            train.append(tmp)
-        # print(train[0])
-        # print(train[-1])
-        np.save(self.outfile.split('.')[0],train)
+            if 'LINE' in self.emb_file:
+                tmp = tmp + self.emb[neg1].tolist() + self.emb[neg2].tolist() + [0]
+            else:
+                tmp = tmp + self.emb[neg1] + self.emb[neg2] + [0]
+            # train.append(tmp)
+            tmp = list(map(lambda x: str(x),tmp))
+            fout.write(' '.join(tmp)+'\n')
+        # print(len(train[0]))   
+
+        fout.close()     
+        # np.save(self.outfile,train)
         
 
         

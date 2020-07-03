@@ -53,6 +53,7 @@ class evaluater:
             import pickle
             f = open(self.emb_file,'rb')
             self.emb = pickle.load(f)
+            # print(self.emb[1],len(self.emb[1]))
             f.close()
             return
 
@@ -88,13 +89,79 @@ class evaluater:
         sim_file.write(str(np.mean(pos))+' '+str(np.mean(neg))+'\n')
         sim_file.close()
 
+class predictor:
+    def __init__(self,train_file):
+        self.train_file = train_file
+
+    def load_data(self,test_size=0.5):
+        from sklearn.model_selection import train_test_split
+        train_x = []
+        train_y = []
+        f = open(self.train_file,'r',encoding='utf-8')
+        for line in f:
+            line = line.strip().split(' ')
+            line = list(map(lambda x: float(x),line))
+            train_x.append(line[:-1])          
+            train_y.append(int(line[-1]))     ##label
+
+        x_train,x_test,y_train,y_test = train_test_split(train_x,train_y,test_size=test_size,stratify=train_y,random_state=233,shuffle=True)
+        
+        
+        return x_train,x_test,y_train,y_test
+
+    def score(self,y_true,pred):
+        from sklearn.metrics import precision_score, recall_score, accuracy_score
+        from sklearn.metrics import  roc_auc_score 
+
+        train_y = y_true
+        auc= roc_auc_score(train_y,pred) 
+        # for i in range(len(pred)):
+            # print(train_y[i],pred[i])
+        print("auc: %s"% auc)
+        return auc
+    
+    def LR_train(self):
+        from sklearn.linear_model import LogisticRegression
+        from sklearn.metrics import accuracy_score
+        # train_x,train_y = self.load_data()
+        times = 50
+        acc = 0
+        f = open('../res/acc.txt','a',encoding='utf-8')
+        
+        for _ in range(times):
+            train_x,test_x,train_y,test_y = self.load_data()
+            lr= LogisticRegression()
+            lr.fit(train_x,train_y)
+            pred = lr.predict(test_x)
+            preds = []
+            for p in pred:
+                if p>0.5:
+                    preds.append(1)
+                else:
+                    preds.append(0)
+            
+            acc += accuracy_score(test_y,preds)
+            
+
+        print(self.train_file)   
+        print('avg acc: {}'.format(acc/times))
+
+        f.write(self.train_file+'\n')   
+        f.write('avg acc: {}\n'.format(acc/times))
+        f.close()
+
 if __name__ == '__main__':
-    embs = ['../emb/LINE.pkl','../emb/node2vec.txt','../emb/HIN2vec/node.txt','../emb/Metapath2vec/covid-plp.txt','../emb/HeGAN/covid_dis.emb','../emb/HeGAN/covid_gen.emb']
-    # embs = ['../emb/LINE.pkl']
-    for emb in embs:
-        print('processing '+emb)
-        E = evaluater(emb)
-        E.compare_similarity()
+    # embs = ['../emb/LINE.pkl','../emb/node2vec.txt','../emb/HIN2vec/node.txt','../emb/Metapath2vec/covid-plp.txt','../emb/HeGAN/covid_dis.emb','../emb/HeGAN/covid_gen.emb']
+    # for emb in embs:
+    #     print('processing '+emb)
+    #     E = evaluater(emb)
+    #     E.compare_similarity()
+    datasets = ['../data/train/node2vec.txt','../data/train/LINE.txt','../data/train/metapath2vec.txt',
+    '../data/train/HIN2vec.txt','../data/train/HeGANdis.txt','../data/train/HeGANgen.txt']
+    for dataset in datasets:
+        print('processing '+dataset)
+        P = predictor(dataset)
+        P.LR_train()
 
         
 
