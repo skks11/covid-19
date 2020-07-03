@@ -10,6 +10,8 @@ class evaluater:
         self.emb = {}
         self.positive = []
         self.negtive = []
+        self.patient_num = 1017
+        self.location_num = 2388
         
 
     def cosine_similarity(self,a, b):
@@ -27,11 +29,17 @@ class evaluater:
             return dot(a, b)/(norm(a)*norm(b))
 
     def get_neg(self):
-        for i in range(1017):
-            for j in range(1017):
-                if [i+1,j+1] not in self.positive:
-                    if i+1 in self.emb.keys() and j+1 in self.emb.keys():
-                        self.negtive.append([i+1,j+1])
+        for i in range(self.patient_num):
+            if i+1 not in self.emb.keys():
+                continue
+            flag = True
+            while flag:
+                j = np.random.randint(1,self.patient_num+1)
+                if [i+1,j] not in self.positive:
+                    if j in self.emb.keys():
+                        self.negtive.append([i+1,j])
+                        flag = False
+
         
     def get_pos(self):
         f = open(self.doublelink,'r',encoding='utf-8')
@@ -81,8 +89,8 @@ class evaluater:
         sim_file.close()
 
 if __name__ == '__main__':
-    # embs = ['../emb/node2vec.txt','../emb/HIN2vec/node.txt','../emb/Metapath2vec/covid-plp.txt','../emb/HeGAN/covid_dis.emb','../emb/HeGAN/covid_gen.emb']
-    embs = ['../emb/LINE.pkl']
+    embs = ['../emb/LINE.pkl','../emb/node2vec.txt','../emb/HIN2vec/node.txt','../emb/Metapath2vec/covid-plp.txt','../emb/HeGAN/covid_dis.emb','../emb/HeGAN/covid_gen.emb']
+    # embs = ['../emb/LINE.pkl']
     for emb in embs:
         print('processing '+emb)
         E = evaluater(emb)

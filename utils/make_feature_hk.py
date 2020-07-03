@@ -3,11 +3,11 @@ import numpy as np
 class FeatureMaker:
     def __init__(self,with_emb=True,emb_only=False,t_th=3,d_th=3):
         # self.emb_file = 'emb.txt'
-        self.p2l_file = '../../hk/data/p2l.txt'
-        self.out_file = '../train/feature_hk.txt'
-        self.link_file = '../../hk/data/doublelink_hk.txt'
-        self.train_file = '../train/train_hk.txt'
-        self.attr_file = '../../hk/data/attrs_hk.txt'
+        self.p2l_file = '../data/p2l.txt'
+        self.out_file = '../data/train/feature_hk.txt'
+        self.link_file = '../data/doublelink_hk.txt'
+        self.train_file = '../data/train/train_hk.txt'
+        self.attr_file = '../data/attrs_hk.txt'
         self.emb_only = emb_only
         self.with_emb = with_emb
         self.t_th = t_th
