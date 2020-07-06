@@ -89,6 +89,32 @@ class evaluater:
         sim_file.write(str(np.mean(pos))+' '+str(np.mean(neg))+'\n')
         sim_file.close()
 
+    def  top_sim(self,topk=10):
+        fout = open('../res/top_sim_top{}.txt'.format(topk),'a',encoding='utf-8')
+        self.load_embedding()
+        maxs = np.array([[0,0,0]for _ in range(topk)])
+        # maxs = []
+        for i in tqdm(range(1,self.patient_num+1)):
+            for j in range(i+1,self.patient_num+1):
+                if i == j:
+                    continue
+                if i not in self.emb.keys() or j not in self.emb.keys():
+                    continue
+                cossim = self.cosine_similarity(self.emb[i],self.emb[j])
+                if cossim > min(maxs[:,:1]):
+                    maxs = np.delete(maxs ,np.argmin(maxs [:,:1]),axis=0)
+                    maxs = np.concatenate((maxs,[[cossim,i,j]]))
+        
+        maxs = sorted(maxs,key=lambda x: x[0],reverse=True)
+        print(maxs)
+        fout.write(self.emb_file+'\n')
+        for i in range(len(maxs)):
+            fout.write(str(maxs[i][1])+' '+str(maxs[i][2])+'\n')
+        fout.write('*********************************\n')
+        fout.close()
+        
+
+
 class predictor:
     def __init__(self,train_file):
         self.train_file = train_file
@@ -108,6 +134,8 @@ class predictor:
         
         
         return x_train,x_test,y_train,y_test
+    
+    
 
     def score(self,y_true,pred):
         from sklearn.metrics import precision_score, recall_score, accuracy_score
@@ -151,17 +179,21 @@ class predictor:
         f.close()
 
 if __name__ == '__main__':
-    # embs = ['../emb/LINE.pkl','../emb/node2vec.txt','../emb/HIN2vec/node.txt','../emb/Metapath2vec/covid-plp.txt','../emb/HeGAN/covid_dis.emb','../emb/HeGAN/covid_gen.emb']
-    # for emb in embs:
-    #     print('processing '+emb)
-    #     E = evaluater(emb)
-    #     E.compare_similarity()
-    datasets = ['../data/train/node2vec.txt','../data/train/LINE.txt','../data/train/metapath2vec.txt',
-    '../data/train/HIN2vec.txt','../data/train/HeGANdis.txt','../data/train/HeGANgen.txt']
-    for dataset in datasets:
-        print('processing '+dataset)
-        P = predictor(dataset)
-        P.LR_train()
+    embs = ['../emb/LINE.pkl','../emb/node2vec.txt','../emb/HIN2vec/node.txt','../emb/Metapath2vec/covid-plp.txt','../emb/HeGAN/covid_dis.emb','../emb/HeGAN/covid_gen.emb']
+    for emb in embs:
+        print('processing '+emb)
+        E = evaluater(emb)
+        # E.compare_similarity()
+        E.top_sim()
+
+
+
+    # datasets = ['../data/train/node2vec.txt','../data/train/LINE.txt','../data/train/metapath2vec.txt',
+    # '../data/train/HIN2vec.txt','../data/train/HeGANdis.txt','../data/train/HeGANgen.txt']
+    # for dataset in datasets:
+    #     print('processing '+dataset)
+    #     P = predictor(dataset)
+    #     P.LR_train()
 
         
 
