@@ -12,6 +12,7 @@ class evaluater:
         self.negtive = []
         self.patient_num = 1017
         self.location_num = 2388
+        self.attr = {}
         
 
     def cosine_similarity(self,a, b):
@@ -28,6 +29,46 @@ class evaluater:
         else:
             return dot(a, b)/(norm(a)*norm(b))
 
+    ##load属性信息并归一化
+    def load_attr(self):
+        f = open('../data/feature_attr_only_hk.txt','r',encoding='utf-8')
+        tmp = []
+        for line in f:
+            line = line.strip().split()
+            attrs  = list(map(lambda x: int(x),line))
+            tmp.append(attrs)
+        f.close()
+        tmp = np.asarray(tmp)
+        tmp = tmp / tmp.max(axis=0)
+        # print(tmp[:2])
+        for i in range(len(tmp)):
+            self.attr[i+1] = tmp[i]
+        # print(self.attr[1])
+    
+    def top_attr_sim(self,topk=10):
+        fout = open('../res/top_attr_sim_top{}.txt'.format(topk),'a',encoding='utf-8')
+        maxs = np.array([[0,0,0]for _ in range(topk)])
+        # maxs = []
+        self.get_pos()
+        for i in tqdm(range(1,self.patient_num+1)):
+            for j in range(i+1,self.patient_num+1):
+                if i == j:
+                    continue
+                cossim = self.cosine_similarity(self.attr[i],self.attr[j])
+                if cossim > min(maxs[:,:1]):
+                    maxs = np.delete(maxs ,np.argmin(maxs [:,:1]),axis=0)
+                    maxs = np.concatenate((maxs,[[cossim,i,j]]))
+        # fout.write(self.emb_file+'\n')
+        for i in range(len(maxs)):
+            fout.write(str(maxs[i][1])+' '+str(maxs[i][2]))
+            if [int(maxs[i][1]),int(maxs[i][2])] in self.positive:
+                fout.write(' yes')
+            else:
+                fout.write(' no')
+            fout.write('\n')
+        fout.write('*********************************\n')
+        fout.close()
+    # 随机生成负例
     def get_neg(self):
         for i in range(self.patient_num):
             if i+1 not in self.emb.keys():
@@ -92,6 +133,7 @@ class evaluater:
     def  top_sim(self,topk=10):
         fout = open('../res/top_sim_top{}.txt'.format(topk),'a',encoding='utf-8')
         self.load_embedding()
+        self.get_pos()
         maxs = np.array([[0,0,0]for _ in range(topk)])
         # maxs = []
         for i in tqdm(range(1,self.patient_num+1)):
@@ -106,10 +148,16 @@ class evaluater:
                     maxs = np.concatenate((maxs,[[cossim,i,j]]))
         
         maxs = sorted(maxs,key=lambda x: x[0],reverse=True)
-        print(maxs)
+        # print(maxs)
         fout.write(self.emb_file+'\n')
         for i in range(len(maxs)):
-            fout.write(str(maxs[i][1])+' '+str(maxs[i][2])+'\n')
+            fout.write(str(maxs[i][1])+' '+str(maxs[i][2]))
+            # print(maxs[i])
+            if [int(maxs[i][1]),int(maxs[i][2])] in self.positive:
+                fout.write(' yes')
+            else:
+                fout.write(' no')
+            fout.write('\n')
         fout.write('*********************************\n')
         fout.close()
         
@@ -135,7 +183,21 @@ class predictor:
         
         return x_train,x_test,y_train,y_test
     
-    
+    def plotPR(self,classifier,x_test,y_test,preds):
+        from sklearn.metrics import precision_recall_curve
+        from sklearn.metrics import plot_precision_recall_curve
+        import matplotlib.pyplot as plt
+        # from sklearn.metrics import average_precision_score
+        # average_precision = average_precision_score(y_test, preds)
+
+        disp = plot_precision_recall_curve(classifier, x_test, y_test)
+
+        # disp.ax_.set_title(self.train_file+' '
+                #    'AP={0:0.2f}'.format(0.88))
+
+
+
+        
 
     def score(self,y_true,pred):
         from sklearn.metrics import precision_score, recall_score, accuracy_score
@@ -150,10 +212,11 @@ class predictor:
     
     def LR_train(self):
         from sklearn.linear_model import LogisticRegression
-        from sklearn.metrics import accuracy_score
+        from sklearn.metrics import accuracy_score,f1_score,classification_report,precision_recall_curve
         # train_x,train_y = self.load_data()
-        times = 50
+        times = 1
         acc = 0
+        f1 = 0
         f = open('../res/acc.txt','a',encoding='utf-8')
         
         for _ in range(times):
@@ -161,36 +224,64 @@ class predictor:
             lr= LogisticRegression()
             lr.fit(train_x,train_y)
             pred = lr.predict(test_x)
-            preds = []
-            for p in pred:
-                if p>0.5:
-                    preds.append(1)
-                else:
-                    preds.append(0)
+            prob = lr.predict_proba(test_x)
             
-            acc += accuracy_score(test_y,preds)
             
-
-        print(self.train_file)   
+            acc += accuracy_score(test_y,pred)
+            f1 += f1_score(test_y,pred)
+        
+        # self.plotPR(lr,test_x,test_y,prob[:,1:])
+        # precision, recall, _ = precision_recall_curve(test_y,prob[:,1:])
+        # import matplotlib.pyplot as plt
+        # plt.plot(recall,precision)
+        # plt.xlabel('recall')
+        # plt.ylabel('precision')
+        # plt.title('PR Curve of '+self.train_file)
+        # plt.show()
+        # print(self.train_file)   
         print('avg acc: {}'.format(acc/times))
 
-        f.write(self.train_file+'\n')   
-        f.write('avg acc: {}\n'.format(acc/times))
+
+        print(classification_report(test_y,pred))
+        # f.write(self.train_file+'\n')   
+        # f.write('avg acc: {}\n'.format(acc/times))
         f.close()
 
 if __name__ == '__main__':
-    embs = ['../emb/LINE.pkl','../emb/node2vec.txt','../emb/HIN2vec/node.txt','../emb/Metapath2vec/covid-plp.txt','../emb/HeGAN/covid_dis.emb','../emb/HeGAN/covid_gen.emb']
-    for emb in embs:
-        print('processing '+emb)
-        E = evaluater(emb)
-        # E.compare_similarity()
-        E.top_sim()
+    embs = ['../emb/LINE.pkl','../emb/node2vec.txt','../emb/HIN2vec/node.txt','../emb/Metapath2vec/covid-plp.txt','../emb/HeGAN/covid_dis.emb','../emb/HeGAN/covid_gen.emb','../emb/HeGAN/covid_dis.emb','../emb/HeGAN/covid_mean.emb']
+    for topk in [10,20,30,40,50]:
+        for emb in embs[-1:]:
+            print('processing '+emb)
+            E = evaluater(emb)
+            # E.compare_similarity()
+            E.top_sim(topk)
+            E.load_attr()
+            E.top_attr_sim(topk)
 
-
-
+    
+    ## emb_only
     # datasets = ['../data/train/node2vec.txt','../data/train/LINE.txt','../data/train/metapath2vec.txt',
     # '../data/train/HIN2vec.txt','../data/train/HeGANdis.txt','../data/train/HeGANgen.txt']
-    # for dataset in datasets:
+    # for dataset in [datasets[2]]:
+    #     print('processing '+dataset)
+    #     P = predictor(dataset)
+    #     P.LR_train()
+    
+
+    # emb + attr
+    # datasets = ['../data/train/node2vec_with_attr.txt','../data/train/LINE_with_attr.txt','../data/train/metapath2vec_with_attr.txt',
+    # '../data/train/HIN2vec_with_attr.txt','../data/train/HeGANdis_with_attr.txt','../data/train/HeGANgen_with_attr.txt']
+    # # for dataset in datasets:
+    # for dataset in [datasets[2]]:
+    #     print('processing '+dataset)
+    #     P = predictor(dataset)
+    #     P.LR_train()
+
+    # ## attr only
+    # datasets = ['../data/train/node2vec_attr_only.txt','../data/train/LINE_attr_only.txt','../data/train/metapath2vec_attr_only.txt',
+    # '../data/train/HIN2vec_attr_only.txt','../data/train/HeGANdis_attr_only.txt','../data/train/HeGANgen_attr_only.txt']
+    # # for dataset in datasets:
+    # for dataset in [datasets[2]]:
     #     print('processing '+dataset)
     #     P = predictor(dataset)
     #     P.LR_train()
