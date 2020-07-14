@@ -46,7 +46,7 @@ class evaluater:
         # print(self.attr[1])
     
     def top_attr_sim(self,topk=10):
-        fout = open('../res/top_attr_sim_top{}.txt'.format(topk),'a',encoding='utf-8')
+        fout = open('../res/top_attr_sim_top.txt','a',encoding='utf-8')
         maxs = np.array([[0,0,0]for _ in range(topk)])
         # maxs = []
         self.get_pos()
@@ -59,6 +59,7 @@ class evaluater:
                     maxs = np.delete(maxs ,np.argmin(maxs [:,:1]),axis=0)
                     maxs = np.concatenate((maxs,[[cossim,i,j]]))
         # fout.write(self.emb_file+'\n')
+        maxs = sorted(maxs,key=lambda x: x[0],reverse=True)
         for i in range(len(maxs)):
             fout.write(str(maxs[i][1])+' '+str(maxs[i][2]))
             if [int(maxs[i][1]),int(maxs[i][2])] in self.positive:
@@ -254,30 +255,30 @@ if __name__ == '__main__':
             print('processing '+emb)
             E = evaluater(emb)
             # E.compare_similarity()
-            E.top_sim(topk)
+            # E.top_sim(topk)
             E.load_attr()
             E.top_attr_sim(topk)
 
     
-    ## emb_only
+    # # emb_only
     # datasets = ['../data/train/node2vec.txt','../data/train/LINE.txt','../data/train/metapath2vec.txt',
-    # '../data/train/HIN2vec.txt','../data/train/HeGANdis.txt','../data/train/HeGANgen.txt']
-    # for dataset in [datasets[2]]:
+    # '../data/train/HIN2vec.txt','../data/train/HeGANdis.txt','../data/train/HeGANgen.txt','../data/train/HeGANmean_with_attr.txt']
+    # for dataset in datasets:
     #     print('processing '+dataset)
     #     P = predictor(dataset)
     #     P.LR_train()
     
 
-    # emb + attr
+    # # emb + attr
     # datasets = ['../data/train/node2vec_with_attr.txt','../data/train/LINE_with_attr.txt','../data/train/metapath2vec_with_attr.txt',
-    # '../data/train/HIN2vec_with_attr.txt','../data/train/HeGANdis_with_attr.txt','../data/train/HeGANgen_with_attr.txt']
+    # '../data/train/HIN2vec_with_attr.txt','../data/train/HeGANdis_with_attr.txt','../data/train/HeGANgen_with_attr.txt','../data/train/HeGANmean_with_attr.txt']
     # # for dataset in datasets:
-    # for dataset in [datasets[2]]:
+    # for dataset in datasets:
     #     print('processing '+dataset)
     #     P = predictor(dataset)
     #     P.LR_train()
 
-    # ## attr only
+    # attr only
     # datasets = ['../data/train/node2vec_attr_only.txt','../data/train/LINE_attr_only.txt','../data/train/metapath2vec_attr_only.txt',
     # '../data/train/HIN2vec_attr_only.txt','../data/train/HeGANdis_attr_only.txt','../data/train/HeGANgen_attr_only.txt']
     # # for dataset in datasets:

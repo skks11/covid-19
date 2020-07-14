@@ -114,26 +114,26 @@ class preprocesser:
 
     def get_neg(self):
         # 1000 * 50 个负例
-        # for i in range(self.patient_num):
-        #     if i+1 not in self.emb.keys():
-        #         continue
-        #     cnt = 0
-        #     while cnt < 5:
-        #         j = np.random.randint(1,self.patient_num+1)
-        #         if [i+1,j] not in self.positive:
-        #             if j in self.emb.keys():
-        #                 self.negtive.append([i+1,j])
-        #                 cnt += 1
+        for i in range(self.patient_num):
+            if i+1 not in self.emb.keys():
+                continue
+            cnt = 0
+            while cnt < 20:
+                j = np.random.randint(1,self.patient_num+1)
+                if [i+1,j] not in self.positive:
+                    if j in self.emb.keys():
+                        self.negtive.append([i+1,j])
+                        cnt += 1
 
         # 枚举出所有负例
-        for i in range(1,self.patient_num+1):
-            if i not in self.emb.keys():
-                continue
-            for j in range(1,self.patient_num+1):
-                if j not in self.emb.keys():
-                    continue
-                if [i,j] not in self.positive:
-                    self.negtive.append([i,j])
+        # for i in range(1,self.patient_num+1):
+        #     if i not in self.emb.keys():
+        #         continue
+        #     for j in range(1,self.patient_num+1):
+        #         if j not in self.emb.keys():
+        #             continue
+        #         if [i,j] not in self.positive:
+        #             self.negtive.append([i,j])
 
         
     def get_pos(self):
@@ -298,21 +298,21 @@ if __name__ == '__main__':
         P.get_train_file()
 
 
-    # datasets = [['../data/train/LINE_with_attr.txt','../emb/LINE.pkl'],
-    # ['../data/train/node2vec_with_attr.txt','../emb/node2vec.txt'],
-    # ['../data/train/HIN2vec_with_attr.txt','../emb/HIN2vec/node.txt'],
-    # ['../data/train/metapath2vec_with_attr.txt','../emb/Metapath2vec/covid-plp.txt'],
-    # ['../data/train/HeGANdis_with_attr.txt','../emb/HeGAN/covid_dis.emb'],
-    # ['../data/train/HeGANgen_with_attr.txt','../emb/HeGAN/covid_gen.emb'],
-    # ['../data/train/HeGANmean_with_attr.txt','../emb/HeGAN/covid_mean.emb']]
+    datasets = [['../data/train/LINE_with_attr.txt','../emb/LINE.pkl'],
+    ['../data/train/node2vec_with_attr.txt','../emb/node2vec.txt'],
+    ['../data/train/HIN2vec_with_attr.txt','../emb/HIN2vec/node.txt'],
+    ['../data/train/metapath2vec_with_attr.txt','../emb/Metapath2vec/covid-plp.txt'],
+    ['../data/train/HeGANdis_with_attr.txt','../emb/HeGAN/covid_dis.emb'],
+    ['../data/train/HeGANgen_with_attr.txt','../emb/HeGAN/covid_gen.emb'],
+    ['../data/train/HeGANmean_with_attr.txt','../emb/HeGAN/covid_mean.emb']]
     
-    # # P = preprocesser('../data/train/node2vec.txt','../data/node2vec.txt')
+    # P = preprocesser('../data/train/node2vec.txt','../data/node2vec.txt')
     # for dataset in [datasets[-1]]:
-    # # for dataset in datasets:
-    #     print('processing '+dataset[1])
-    #     P = preprocesser(dataset[0],dataset[1])
-    #     P.load_attr()
-    #     P.get_train_file_with_attr()
+    for dataset in datasets:
+        print('processing '+dataset[1])
+        P = preprocesser(dataset[0],dataset[1])
+        P.load_attr()
+        P.get_train_file_with_attr()
 
     # datasets = [['../data/train/LINE_attr_only.txt','../emb/LINE.pkl'],
     # ['../data/train/node2vec_attr_only.txt','../emb/node2vec.txt'],
