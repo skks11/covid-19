@@ -249,15 +249,8 @@ class predictor:
         f.close()
 
 if __name__ == '__main__':
-    embs = ['../emb/LINE.pkl','../emb/node2vec.txt','../emb/HIN2vec/node.txt','../emb/Metapath2vec/covid-plp.txt','../emb/HeGAN/covid_dis.emb','../emb/HeGAN/covid_gen.emb','../emb/HeGAN/covid_dis.emb','../emb/HeGAN/covid_mean.emb']
-    for topk in [10,20,30,40,50]:
-        for emb in embs[-1:]:
-            print('processing '+emb)
-            E = evaluater(emb)
-            # E.compare_similarity()
-            # E.top_sim(topk)
-            E.load_attr()
-            E.top_attr_sim(topk)
+    # 
+    
 
     
     # # emb_only
@@ -269,14 +262,14 @@ if __name__ == '__main__':
     #     P.LR_train()
     
 
-    # # emb + attr
-    # datasets = ['../data/train/node2vec_with_attr.txt','../data/train/LINE_with_attr.txt','../data/train/metapath2vec_with_attr.txt',
-    # '../data/train/HIN2vec_with_attr.txt','../data/train/HeGANdis_with_attr.txt','../data/train/HeGANgen_with_attr.txt','../data/train/HeGANmean_with_attr.txt']
-    # # for dataset in datasets:
+    # emb + attr
+    datasets = ['../data/train/node2vec_with_attr.txt','../data/train/LINE_with_attr.txt','../data/train/metapath2vec_with_attr.txt',
+    '../data/train/HIN2vec_with_attr.txt','../data/train/HeGANdis_with_attr.txt','../data/train/HeGANgen_with_attr.txt','../data/train/HeGANmean_with_attr.txt']
+    for dataset in [datasets[2]]:
     # for dataset in datasets:
-    #     print('processing '+dataset)
-    #     P = predictor(dataset)
-    #     P.LR_train()
+        print('processing '+dataset)
+        P = predictor(dataset)
+        P.LR_train()
 
     # attr only
     # datasets = ['../data/train/node2vec_attr_only.txt','../data/train/LINE_attr_only.txt','../data/train/metapath2vec_attr_only.txt',
