@@ -179,7 +179,7 @@ class predictor:
             train_x.append(line[:-1])          
             train_y.append(int(line[-1]))     ##label
 
-        x_train,x_test,y_train,y_test = train_test_split(train_x,train_y,test_size=test_size,stratify=train_y,random_state=233,shuffle=True)
+        x_train,x_test,y_train,y_test = train_test_split(train_x,train_y,test_size=test_size,stratify=train_y,shuffle=True)
         
         
         return x_train,x_test,y_train,y_test
@@ -196,6 +196,44 @@ class predictor:
         # disp.ax_.set_title(self.train_file+' '
                 #    'AP={0:0.2f}'.format(0.88))
 
+    def recall_at_topk(self,topk=50):
+        from sklearn.linear_model import LogisticRegression
+        from sklearn.metrics import accuracy_score,f1_score,classification_report,precision_recall_curve
+        # train_x,train_y = self.load_data()
+        times = 1
+        acc = 0
+        f1 = 0
+        f = open('../res/acc.txt','a',encoding='utf-8')
+        
+        for _ in range(times):
+            train_x,test_x,train_y,test_y = self.load_data()
+            lr= LogisticRegression()
+            lr.fit(train_x,train_y)
+            pred = lr.predict(test_x)
+            prob = lr.predict_proba(test_x)
+            
+            
+            # acc += accuracy_score(test_y,pred)
+            # f1 += f1_score(test_y,pred)
+        
+        all_pos = np.sum(test_y)
+        print('all pos '+str(all_pos))
+        pos = []
+        for i in range(len(pred)):
+            pos.append([prob[i][1],i])
+        pos = sorted(pos,key=lambda x: x[0],reverse=True)
+        cnt = 0
+        for i in range(topk):
+            if test_y[pos[i][1]] == 1:
+                cnt += 1
+        print(cnt)
+
+        print('avg acc: {}'.format(acc/times))
+        print(classification_report(test_y,pred))
+
+        # f.write(self.train_file+'\n')   
+        # f.write('avg acc: {}\n'.format(acc/times))
+        f.close()
 
 
         
@@ -269,7 +307,9 @@ if __name__ == '__main__':
     # for dataset in datasets:
         print('processing '+dataset)
         P = predictor(dataset)
-        P.LR_train()
+        # P.LR_train()
+        P.recall_at_topk(50)
+        P.recall_at_topk(500)
 
     # attr only
     # datasets = ['../data/train/node2vec_attr_only.txt','../data/train/LINE_attr_only.txt','../data/train/metapath2vec_attr_only.txt',

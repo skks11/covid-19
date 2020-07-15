@@ -15,6 +15,7 @@ class preprocesser:
         self.patient_num = 1017
         self.location_num = 2388
         self.imported = []
+        self.num_neg = 5
     
     def get_import(self):
         f = open('../data/import.txt','r',encoding='utf-8')
@@ -123,30 +124,30 @@ class preprocesser:
         print('negative sampling......')
         self.get_import()
         # 1000 * 50 个负例
-        # for i in range(self.patient_num):
-        #     if i+1 not in self.emb.keys():
-        #         continue
-        #     cnt = 0
-        #     while cnt < 20:
-        #         j = np.random.randint(1,self.patient_num+1)
-        #         if i+1 in self.imported and j in self.imported:
-        #             continue
-        #         if [i+1,j] not in self.positive:
-        #             if j in self.emb.keys():
-        #                 self.negtive.append([i+1,j])
-        #                 cnt += 1
+        for i in range(self.patient_num):
+            if i+1 not in self.emb.keys():
+                continue
+            cnt = 0
+            while cnt < self.num_neg:
+                j = np.random.randint(1,self.patient_num+1)
+                if i+1 in self.imported and j in self.imported:
+                    continue
+                if [i+1,j] not in self.positive:
+                    if j in self.emb.keys():
+                        self.negtive.append([i+1,j])
+                        cnt += 1
 
         # 枚举出所有负例
-        for i in tqdm(range(1,self.patient_num+1)):
-            if i not in self.emb.keys():
-                continue
-            for j in range(1,self.patient_num+1):
-                if j not in self.emb.keys():
-                    continue
-                if i in self.imported and j in self.imported:
-                    continue
-                if [i,j] not in self.positive:
-                    self.negtive.append([i,j])
+        # for i in tqdm(range(1,self.patient_num+1)):
+        #     if i not in self.emb.keys():
+        #         continue
+        #     for j in range(1,self.patient_num+1):
+        #         if j not in self.emb.keys():
+        #             continue
+        #         if i in self.imported and j in self.imported:
+        #             continue
+        #         if [i,j] not in self.positive:
+        #             self.negtive.append([i,j])
 
         
     def get_pos(self):
@@ -241,11 +242,12 @@ class preprocesser:
         fout.close()     
     
     def get_train_file(self,with_attr=False):
-        print('synthesis training data......')
+        
         self.load_embedding()
         self.get_pos()
         self.get_neg()
         # train = []
+        print('synthesis training data......')
         fout = open(self.outfile,'w',encoding='utf-8')
         for pair in self.positive:
             tmp = []
@@ -327,6 +329,7 @@ if __name__ == '__main__':
     # for dataset in datasets:
         print('processing '+dataset[1])
         P = preprocesser(dataset[0],dataset[1])
+        P.num_neg = 20
         P.load_attr()
         P.get_train_file_with_attr()
 
