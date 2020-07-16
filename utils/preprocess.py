@@ -301,37 +301,38 @@ if __name__ == '__main__':
     # P.get_non_HIN()
 
 
-    # datasets = [['../data/train/LINE.txt','../emb/LINE.pkl'],
-    # ['../data/train/node2vec.txt','../emb/node2vec.txt'],
-    # ['../data/train/HIN2vec.txt','../emb/HIN2vec/node.txt'],
-    # ['../data/train/metapath2vec.txt','../emb/Metapath2vec/covid-plp.txt'],
-    # ['../data/train/HeGANdis.txt','../emb/HeGAN/covid_dis.emb'],
-    # ['../data/train/HeGANgen.txt','../emb/HeGAN/covid_gen.emb'],
-    # ['../data/train/HeGANmean_with_attr.txt','../emb/HeGAN/covid_mean.emb']]
+    datasets = [['../data/train/LINE.txt','../emb/LINE.pkl'],
+    ['../data/train/node2vec.txt','../emb/node2vec.txt'],
+    ['../data/train/HIN2vec.txt','../emb/HIN2vec/node.txt'],
+    ['../data/train/metapath2vec.txt','../emb/Metapath2vec/covid-plp.txt'],
+    ['../data/train/HeGANdis.txt','../emb/HeGAN/covid_dis.emb'],
+    ['../data/train/HeGANgen.txt','../emb/HeGAN/covid_gen.emb'],
+    ['../data/train/HeGANmean.txt','../emb/HeGAN/covid_mean.emb']]
     
    
-    # for dataset in datasets:
-    #     print('processing '+dataset[1])
-    #     P = preprocesser(dataset[0],dataset[1])
-    #     P.get_train_file()
-   
-
-    datasets = [['../data/train/LINE_with_attr.txt','../emb/LINE.pkl'],
-    ['../data/train/node2vec_with_attr.txt','../emb/node2vec.txt'],
-    ['../data/train/HIN2vec_with_attr.txt','../emb/HIN2vec/node.txt'],
-    ['../data/train/metapath2vec_with_attr.txt','../emb/Metapath2vec/covid-plp.txt'],
-    ['../data/train/HeGANdis_with_attr.txt','../emb/HeGAN/covid_dis.emb'],
-    ['../data/train/HeGANgen_with_attr.txt','../emb/HeGAN/covid_gen.emb'],
-    ['../data/train/HeGANmean_with_attr.txt','../emb/HeGAN/covid_mean.emb']]
-    
-    # P = preprocesser('../data/train/node2vec.txt','../data/node2vec.txt')
-    for dataset in [datasets[3]]:
-    # for dataset in datasets:
+    for dataset in datasets:
         print('processing '+dataset[1])
         P = preprocesser(dataset[0],dataset[1])
         P.num_neg = 20
-        P.load_attr()
-        P.get_train_file_with_attr()
+        P.get_train_file()
+   
+
+    # datasets = [['../data/train/LINE_with_attr.txt','../emb/LINE.pkl'],
+    # ['../data/train/node2vec_with_attr.txt','../emb/node2vec.txt'],
+    # ['../data/train/HIN2vec_with_attr.txt','../emb/HIN2vec/node.txt'],
+    # ['../data/train/metapath2vec_with_attr.txt','../emb/Metapath2vec/covid-plp.txt'],
+    # ['../data/train/HeGANdis_with_attr.txt','../emb/HeGAN/covid_dis.emb'],
+    # ['../data/train/HeGANgen_with_attr.txt','../emb/HeGAN/covid_gen.emb'],
+    # ['../data/train/HeGANmean_with_attr.txt','../emb/HeGAN/covid_mean.emb']]
+    
+    # # P = preprocesser('../data/train/node2vec.txt','../data/node2vec.txt')
+    # # for dataset in [datasets[3]]:
+    # for dataset in datasets:
+    #     print('processing '+dataset[1])
+    #     P = preprocesser(dataset[0],dataset[1])
+    #     P.num_neg = 20
+    #     P.load_attr()
+    #     P.get_train_file_with_attr()
 
     # datasets = [['../data/train/LINE_attr_only.txt','../emb/LINE.pkl'],
     # ['../data/train/node2vec_attr_only.txt','../emb/node2vec.txt'],
@@ -341,10 +342,11 @@ if __name__ == '__main__':
     # ['../data/train/HeGANgen_attr_only.txt','../emb/HeGAN/covid_gen.emb']]
     
     # # P = preprocesser('../data/train/node2vec.txt','../data/node2vec.txt')
-    # for dataset in [datasets[3]]:
-    # # for dataset in datasets:
+    # # for dataset in [datasets[3]]:
+    # for dataset in datasets:
     #     print('processing '+dataset[1])
     #     P = preprocesser(dataset[0],dataset[1])
+    #     P.num_neg = 20
     #     P.load_attr()
     #     P.get_train_file_attr_only()
 

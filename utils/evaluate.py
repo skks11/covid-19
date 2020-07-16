@@ -226,10 +226,10 @@ class predictor:
         for i in range(topk):
             if test_y[pos[i][1]] == 1:
                 cnt += 1
-        print(cnt)
+        print(str(cnt) + '     topk = '+str(topk))
+        # print(cnt)
 
-        print('avg acc: {}'.format(acc/times))
-        print(classification_report(test_y,pred))
+        
 
         # f.write(self.train_file+'\n')   
         # f.write('avg acc: {}\n'.format(acc/times))
@@ -292,24 +292,32 @@ if __name__ == '__main__':
 
     
     # # emb_only
-    # datasets = ['../data/train/node2vec.txt','../data/train/LINE.txt','../data/train/metapath2vec.txt',
-    # '../data/train/HIN2vec.txt','../data/train/HeGANdis.txt','../data/train/HeGANgen.txt','../data/train/HeGANmean_with_attr.txt']
-    # for dataset in datasets:
-    #     print('processing '+dataset)
-    #     P = predictor(dataset)
+    datasets = ['../data/train/node2vec.txt','../data/train/LINE.txt','../data/train/metapath2vec.txt',
+    '../data/train/HIN2vec.txt','../data/train/HeGANdis.txt','../data/train/HeGANgen.txt','../data/train/HeGANmean.txt']
+    for dataset in datasets:
+        print('processing '+dataset)
+        P = predictor(dataset)
     #     P.LR_train()
+        P.recall_at_topk(50)
+        P.recall_at_topk(200)
+        P.recall_at_topk(500)
+        P.recall_at_topk(1000)
+        P.recall_at_topk(1569)
     
 
     # emb + attr
-    datasets = ['../data/train/node2vec_with_attr.txt','../data/train/LINE_with_attr.txt','../data/train/metapath2vec_with_attr.txt',
-    '../data/train/HIN2vec_with_attr.txt','../data/train/HeGANdis_with_attr.txt','../data/train/HeGANgen_with_attr.txt','../data/train/HeGANmean_with_attr.txt']
-    for dataset in [datasets[2]]:
+    # datasets = ['../data/train/node2vec_with_attr.txt','../data/train/LINE_with_attr.txt','../data/train/metapath2vec_with_attr.txt',
+    # '../data/train/HIN2vec_with_attr.txt','../data/train/HeGANdis_with_attr.txt','../data/train/HeGANgen_with_attr.txt','../data/train/HeGANmean_with_attr.txt']
+    # # for dataset in [datasets[2]]:
     # for dataset in datasets:
-        print('processing '+dataset)
-        P = predictor(dataset)
-        # P.LR_train()
-        P.recall_at_topk(50)
-        P.recall_at_topk(500)
+    #     print('processing '+dataset)
+    #     P = predictor(dataset)
+    #     # P.LR_train()
+    #     P.recall_at_topk(50)
+    #     P.recall_at_topk(200)
+    #     P.recall_at_topk(500)
+    #     P.recall_at_topk(1000)
+    #     P.recall_at_topk(1569)
 
     # attr only
     # datasets = ['../data/train/node2vec_attr_only.txt','../data/train/LINE_attr_only.txt','../data/train/metapath2vec_attr_only.txt',
@@ -318,7 +326,12 @@ if __name__ == '__main__':
     # for dataset in [datasets[2]]:
     #     print('processing '+dataset)
     #     P = predictor(dataset)
-    #     P.LR_train()
+    #     # P.LR_train()
+    #     P.recall_at_topk(50)
+    #     P.recall_at_topk(200)
+    #     P.recall_at_topk(500)
+    #     P.recall_at_topk(1000)
+    #     P.recall_at_topk(1569)
 
         
 
