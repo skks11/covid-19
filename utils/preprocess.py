@@ -14,13 +14,20 @@ class preprocesser:
         self.negtive = []
         self.patient_num = 1017
         self.location_num = 2388
-        self.imported = []
+        self.imported = []   #输入案例
+        self.date = {}          #确诊日期
         self.num_neg = 5
     
     def get_import(self):
         f = open('../data/import.txt','r',encoding='utf-8')
         for line in f:
             self.imported.append(int(line.strip()))
+    
+    def get_date(self):
+        f = open('../data/feature_attr_only_hk.txt','r',encoding='utf-8')
+        for i,line in enumerate(f):
+            line = line.strip().split()
+            self.date[i+1] = int(line[2])            
 
     def get_mappings(self):
         f = open('../data/node_mappings.txt','w',encoding = 'utf-8')
@@ -123,31 +130,40 @@ class preprocesser:
     def get_neg(self):
         print('negative sampling......')
         self.get_import()
+        self.get_date()
         # 1000 * 50 个负例
-        for i in range(self.patient_num):
-            if i+1 not in self.emb.keys():
-                continue
-            cnt = 0
-            while cnt < self.num_neg:
-                j = np.random.randint(1,self.patient_num+1)
-                if i+1 in self.imported and j in self.imported:
-                    continue
-                if [i+1,j] not in self.positive:
-                    if j in self.emb.keys():
-                        self.negtive.append([i+1,j])
-                        cnt += 1
-
-        # 枚举出所有负例
-        # for i in tqdm(range(1,self.patient_num+1)):
+        # for i in range(1,self.patient_num+1):
         #     if i not in self.emb.keys():
         #         continue
-        #     for j in range(1,self.patient_num+1):
-        #         if j not in self.emb.keys():
+        #     cnt = 0
+        #     while cnt < self.num_neg:
+        #         j = np.random.randint(1,self.patient_num+1)
+        #         if i == j:
         #             continue
         #         if i in self.imported and j in self.imported:
         #             continue
+        #         if abs(self.date[i]-self.date[j]) >= 14:         #确诊日期相差大于两周
+        #             continue
         #         if [i,j] not in self.positive:
-        #             self.negtive.append([i,j])
+        #             if j in self.emb.keys():
+        #                 self.negtive.append([i,j])
+        #                 cnt += 1
+
+        # 枚举出所有负例
+        for i in tqdm(range(1,self.patient_num+1)):
+            if i not in self.emb.keys():
+                continue
+            for j in range(1,self.patient_num+1):
+                if i == j:
+                    continue
+                if j not in self.emb.keys():
+                    continue
+                if i in self.imported and j in self.imported:    #均为输入案例
+                    continue
+                if abs(self.date[i]-self.date[j]) >= 14:         #确诊日期相差大于两周
+                    continue
+                if [i,j] not in self.positive:
+                    self.negtive.append([i,j])
 
         
     def get_pos(self):
@@ -158,10 +174,10 @@ class preprocesser:
         f.close()
     
     def get_train_file_attr_only(self):
-        print('synthesis training data......')
         self.load_embedding()
         self.get_pos()
         self.get_neg()
+        print('synthesis training data......')
         # train = []
         fout = open(self.outfile,'w',encoding='utf-8')
         for pair in self.positive:
@@ -198,12 +214,14 @@ class preprocesser:
     
 
     def get_train_file_with_attr(self):
-        print('synthesis training data......')
         self.load_embedding()
         self.get_pos()
         self.get_neg()
+        print('synthesis training data......')
         # train = []
         fout = open(self.outfile,'w',encoding='utf-8')
+        fout2 = open('../data/train/mapping.txt','w',encoding='utf-8')
+
         for pair in self.positive:
             tmp = []
             pos1,pos2 = pair[0],pair[1]
@@ -220,7 +238,7 @@ class preprocesser:
             # train.append(tmp)
             tmp = list(map(lambda x: str(x),tmp))
             fout.write(' '.join(tmp)+'\n')
-            
+            fout2.write(str(pos1)+' '+str(pos2)+'\n')
         
 
         for pair in self.negtive:
@@ -237,12 +255,12 @@ class preprocesser:
             # train.append(tmp)
             tmp = list(map(lambda x: str(x),tmp))
             fout.write(' '.join(tmp)+'\n')
+            fout2.write(str(neg1)+' '+str(neg2)+'\n')
         # print(len(train[0]))   
-
+        fout2.close()
         fout.close()     
     
     def get_train_file(self,with_attr=False):
-        
         self.load_embedding()
         self.get_pos()
         self.get_neg()
@@ -301,38 +319,38 @@ if __name__ == '__main__':
     # P.get_non_HIN()
 
 
-    datasets = [['../data/train/LINE.txt','../emb/LINE.pkl'],
-    ['../data/train/node2vec.txt','../emb/node2vec.txt'],
-    ['../data/train/HIN2vec.txt','../emb/HIN2vec/node.txt'],
-    ['../data/train/metapath2vec.txt','../emb/Metapath2vec/covid-plp.txt'],
-    ['../data/train/HeGANdis.txt','../emb/HeGAN/covid_dis.emb'],
-    ['../data/train/HeGANgen.txt','../emb/HeGAN/covid_gen.emb'],
-    ['../data/train/HeGANmean.txt','../emb/HeGAN/covid_mean.emb']]
+    # datasets = [['../data/train/LINE.txt','../emb/LINE.pkl'],
+    # ['../data/train/node2vec.txt','../emb/node2vec.txt'],
+    # ['../data/train/HIN2vec.txt','../emb/HIN2vec/node.txt'],
+    # ['../data/train/metapath2vec.txt','../emb/Metapath2vec/covid-plp.txt'],
+    # ['../data/train/HeGANdis.txt','../emb/HeGAN/covid_dis.emb'],
+    # ['../data/train/HeGANgen.txt','../emb/HeGAN/covid_gen.emb'],
+    # ['../data/train/HeGANmean.txt','../emb/HeGAN/covid_mean.emb']]
     
-   
-    for dataset in datasets:
-        print('processing '+dataset[1])
-        P = preprocesser(dataset[0],dataset[1])
-        P.num_neg = 20
-        P.get_train_file()
-   
-
-    # datasets = [['../data/train/LINE_with_attr.txt','../emb/LINE.pkl'],
-    # ['../data/train/node2vec_with_attr.txt','../emb/node2vec.txt'],
-    # ['../data/train/HIN2vec_with_attr.txt','../emb/HIN2vec/node.txt'],
-    # ['../data/train/metapath2vec_with_attr.txt','../emb/Metapath2vec/covid-plp.txt'],
-    # ['../data/train/HeGANdis_with_attr.txt','../emb/HeGAN/covid_dis.emb'],
-    # ['../data/train/HeGANgen_with_attr.txt','../emb/HeGAN/covid_gen.emb'],
-    # ['../data/train/HeGANmean_with_attr.txt','../emb/HeGAN/covid_mean.emb']]
-    
-    # # P = preprocesser('../data/train/node2vec.txt','../data/node2vec.txt')
-    # # for dataset in [datasets[3]]:
-    # for dataset in datasets:
+    # for dataset in [datasets[-1],datasets[3]]:
+    # # for dataset in datasets:
     #     print('processing '+dataset[1])
     #     P = preprocesser(dataset[0],dataset[1])
     #     P.num_neg = 20
-    #     P.load_attr()
-    #     P.get_train_file_with_attr()
+    #     P.get_train_file()
+   
+
+    datasets = [['../data/train/LINE_with_attr.txt','../emb/LINE.pkl'],
+    ['../data/train/node2vec_with_attr.txt','../emb/node2vec.txt'],
+    ['../data/train/HIN2vec_with_attr.txt','../emb/HIN2vec/node.txt'],
+    ['../data/train/metapath2vec_with_attr.txt','../emb/Metapath2vec/covid-plp.txt'],
+    ['../data/train/HeGANdis_with_attr.txt','../emb/HeGAN/covid_dis.emb'],
+    ['../data/train/HeGANgen_with_attr.txt','../emb/HeGAN/covid_gen.emb'],
+    ['../data/train/HeGANmean_with_attr.txt','../emb/HeGAN/covid_mean.emb']]
+    
+    # P = preprocesser('../data/train/node2vec.txt','../data/node2vec.txt')
+    for dataset in [datasets[-1],datasets[3]]:
+    # for dataset in datasets:
+        print('processing '+dataset[1])
+        P = preprocesser(dataset[0],dataset[1])
+        P.num_neg = 20
+        P.load_attr()
+        P.get_train_file_with_attr()
 
     # datasets = [['../data/train/LINE_attr_only.txt','../emb/LINE.pkl'],
     # ['../data/train/node2vec_attr_only.txt','../emb/node2vec.txt'],
@@ -342,8 +360,8 @@ if __name__ == '__main__':
     # ['../data/train/HeGANgen_attr_only.txt','../emb/HeGAN/covid_gen.emb']]
     
     # # P = preprocesser('../data/train/node2vec.txt','../data/node2vec.txt')
-    # # for dataset in [datasets[3]]:
-    # for dataset in datasets:
+    # for dataset in [datasets[3]]:
+    # # for dataset in datasets:
     #     print('processing '+dataset[1])
     #     P = preprocesser(dataset[0],dataset[1])
     #     P.num_neg = 20

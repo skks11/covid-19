@@ -178,8 +178,11 @@ class predictor:
             line = list(map(lambda x: float(x),line))
             train_x.append(line[:-1])          
             train_y.append(int(line[-1]))     ##label
+        f.close()
 
-        x_train,x_test,y_train,y_test = train_test_split(train_x,train_y,test_size=test_size,stratify=train_y,shuffle=True)
+        
+
+        x_train,x_test,y_train,y_test = train_test_split(train_x,train_y,test_size=test_size,random_state=100,stratify=train_y,shuffle=True)
         
         
         return x_train,x_test,y_train,y_test
@@ -196,9 +199,31 @@ class predictor:
         # disp.ax_.set_title(self.train_file+' '
                 #    'AP={0:0.2f}'.format(0.88))
 
-    def recall_at_topk(self,topk=50):
+    def recall_at_topk(self):
         from sklearn.linear_model import LogisticRegression
         from sklearn.metrics import accuracy_score,f1_score,classification_report,precision_recall_curve
+        from sklearn.model_selection import train_test_split
+        
+        pairs = []
+        f = open('../data/train/mapping.txt','r',encoding='utf-8')
+        for line in f:
+            line= line.strip().split()
+            pairs.append([int(line[0]),int(line[1])])
+        f.close()
+
+        train_x = []
+        train_y = []
+        f = open(self.train_file,'r',encoding='utf-8')
+        for line in f:
+            line = line.strip().split(' ')
+            line = list(map(lambda x: float(x),line))
+            train_x.append(line[:-1])          
+            train_y.append(int(line[-1]))     ##label
+        f.close()
+
+        p_train,p_test,y_train,y_test = train_test_split(pairs,train_y,test_size=0.5,random_state=100,stratify=train_y,shuffle=True)
+
+
         # train_x,train_y = self.load_data()
         times = 1
         acc = 0
@@ -222,14 +247,39 @@ class predictor:
         for i in range(len(pred)):
             pos.append([prob[i][1],i])
         pos = sorted(pos,key=lambda x: x[0],reverse=True)
-        cnt = 0
-        for i in range(topk):
-            if test_y[pos[i][1]] == 1:
-                cnt += 1
-        print(str(cnt) + '     topk = '+str(topk))
+        
+
+        topks = [500,1000,1569]
+        for topk in topks:
+            cnt = 0
+            for i in range(topk):
+                if test_y[pos[i][1]] == 1:
+                    cnt += 1
+                # if test_y[pos[i][1]] == 0:
+                #     print(p_test[pos[i][1]])
+            print(str(cnt) + '     topk = '+str(topk))
         # print(cnt)
 
+        print(pos[topk],pred[pos[i][1]])
+        cnt =0
+        # print(classification_report(test_y,pred))
+        # print(np.sum(pred))
+        for i in range(len(pred)):
+            if pred[i] == 1 and test_y[i] == 1:
+                cnt += 1
+        print(cnt)
+        print(cnt/1569)
+
+        pred2 = []
+        thresh = pos[topk][0]
+        for i in range(len(prob)):
+            if prob[i][1] >= thresh:
+                pred2.append(1)
+            else:
+                pred2.append(0)
         
+        print(classification_report(test_y,pred2))
+
 
         # f.write(self.train_file+'\n')   
         # f.write('avg acc: {}\n'.format(acc/times))
@@ -260,7 +310,7 @@ class predictor:
         
         for _ in range(times):
             train_x,test_x,train_y,test_y = self.load_data()
-            lr= LogisticRegression()
+            lr= LogisticRegression(class_weight='balanced')
             lr.fit(train_x,train_y)
             pred = lr.predict(test_x)
             prob = lr.predict_proba(test_x)
@@ -291,33 +341,27 @@ if __name__ == '__main__':
     
 
     
-    # # emb_only
-    datasets = ['../data/train/node2vec.txt','../data/train/LINE.txt','../data/train/metapath2vec.txt',
-    '../data/train/HIN2vec.txt','../data/train/HeGANdis.txt','../data/train/HeGANgen.txt','../data/train/HeGANmean.txt']
-    for dataset in datasets:
-        print('processing '+dataset)
-        P = predictor(dataset)
-    #     P.LR_train()
-        P.recall_at_topk(50)
-        P.recall_at_topk(200)
-        P.recall_at_topk(500)
-        P.recall_at_topk(1000)
-        P.recall_at_topk(1569)
+    # emb_only
+    # datasets = ['../data/train/node2vec.txt','../data/train/LINE.txt','../data/train/metapath2vec.txt',
+    # '../data/train/HIN2vec.txt','../data/train/HeGANdis.txt','../data/train/HeGANgen.txt','../data/train/HeGANmean.txt']
+    # for dataset in [datasets[-1],datasets[2]]:
+    #     print('processing '+dataset)
+    #     P = predictor(dataset)
+    # #     P.LR_train()
+    #     P.recall_at_topk()
+        
     
 
     # emb + attr
-    # datasets = ['../data/train/node2vec_with_attr.txt','../data/train/LINE_with_attr.txt','../data/train/metapath2vec_with_attr.txt',
-    # '../data/train/HIN2vec_with_attr.txt','../data/train/HeGANdis_with_attr.txt','../data/train/HeGANgen_with_attr.txt','../data/train/HeGANmean_with_attr.txt']
-    # # for dataset in [datasets[2]]:
+    datasets = ['../data/train/node2vec_with_attr.txt','../data/train/LINE_with_attr.txt','../data/train/metapath2vec_with_attr.txt',
+    '../data/train/HIN2vec_with_attr.txt','../data/train/HeGANdis_with_attr.txt','../data/train/HeGANgen_with_attr.txt','../data/train/HeGANmean_with_attr.txt']
+    for dataset in [datasets[-1],datasets[2]]:
     # for dataset in datasets:
-    #     print('processing '+dataset)
-    #     P = predictor(dataset)
-    #     # P.LR_train()
-    #     P.recall_at_topk(50)
-    #     P.recall_at_topk(200)
-    #     P.recall_at_topk(500)
-    #     P.recall_at_topk(1000)
-    #     P.recall_at_topk(1569)
+        print('processing '+dataset)
+        P = predictor(dataset)
+        # P.LR_train()
+        P.recall_at_topk()
+        
 
     # attr only
     # datasets = ['../data/train/node2vec_attr_only.txt','../data/train/LINE_attr_only.txt','../data/train/metapath2vec_attr_only.txt',
@@ -327,11 +371,8 @@ if __name__ == '__main__':
     #     print('processing '+dataset)
     #     P = predictor(dataset)
     #     # P.LR_train()
-    #     P.recall_at_topk(50)
-    #     P.recall_at_topk(200)
-    #     P.recall_at_topk(500)
-    #     P.recall_at_topk(1000)
-    #     P.recall_at_topk(1569)
+    #     P.recall_at_topk()
+    
 
         
 
