@@ -132,38 +132,38 @@ class preprocesser:
         self.get_import()
         self.get_date()
         # 1000 * 50 个负例
-        # for i in range(1,self.patient_num+1):
-        #     if i not in self.emb.keys():
-        #         continue
-        #     cnt = 0
-        #     while cnt < self.num_neg:
-        #         j = np.random.randint(1,self.patient_num+1)
-        #         if i == j:
-        #             continue
-        #         if i in self.imported and j in self.imported:
-        #             continue
-        #         if abs(self.date[i]-self.date[j]) >= 14:         #确诊日期相差大于两周
-        #             continue
-        #         if [i,j] not in self.positive:
-        #             if j in self.emb.keys():
-        #                 self.negtive.append([i,j])
-        #                 cnt += 1
-
-        # 枚举出所有负例
-        for i in tqdm(range(1,self.patient_num+1)):
+        for i in range(1,self.patient_num+1):
             if i not in self.emb.keys():
                 continue
-            for j in range(1,self.patient_num+1):
+            cnt = 0
+            while cnt < self.num_neg:
+                j = np.random.randint(1,self.patient_num+1)
                 if i == j:
                     continue
-                if j not in self.emb.keys():
-                    continue
-                if i in self.imported and j in self.imported:    #均为输入案例
+                if i in self.imported and j in self.imported:
                     continue
                 if abs(self.date[i]-self.date[j]) >= 14:         #确诊日期相差大于两周
                     continue
                 if [i,j] not in self.positive:
-                    self.negtive.append([i,j])
+                    if j in self.emb.keys():
+                        self.negtive.append([i,j])
+                        cnt += 1
+
+        # 枚举出所有负例
+        # for i in tqdm(range(1,self.patient_num+1)):
+        #     if i not in self.emb.keys():
+        #         continue
+        #     for j in range(1,self.patient_num+1):
+        #         if i == j:
+        #             continue
+        #         if j not in self.emb.keys():
+        #             continue
+        #         if i in self.imported and j in self.imported:    #均为输入案例
+        #             continue
+        #         if abs(self.date[i]-self.date[j]) >= 14:         #确诊日期相差大于两周
+        #             continue
+        #         if [i,j] not in self.positive:
+        #             self.negtive.append([i,j])
 
         
     def get_pos(self):
@@ -344,7 +344,7 @@ if __name__ == '__main__':
     ['../data/train/HeGANmean_with_attr.txt','../emb/HeGAN/covid_mean.emb']]
     
     # P = preprocesser('../data/train/node2vec.txt','../data/node2vec.txt')
-    for dataset in [datasets[-1],datasets[3]]:
+    for dataset in [datasets[3]]:
     # for dataset in datasets:
         print('processing '+dataset[1])
         P = preprocesser(dataset[0],dataset[1])
