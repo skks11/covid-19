@@ -3,19 +3,21 @@ import numpy as np
 class FeatureMaker:
     def __init__(self,with_emb=True,emb_only=False,t_th=3,d_th=3):
         # self.emb_file = 'emb.txt'
-        self.p2l_file = '../../hk/data/p2l.txt'
-        self.out_file = '../train/feature_hk.txt'
-        self.link_file = '../../hk/data/doublelink_hk.txt'
-        self.train_file = '../train/train_hk.txt'
-        self.attr_file = '../../hk/data/attrs_hk.txt'
+        self.p2l_file = '../data/p2l.txt'
+        self.out_file = '../data/train/feature_hk.txt'
+        self.link_file = '../data/doublelink_hk.txt'
+        self.train_file = '../data/train/train_hk.txt'
+        self.attr_file = '../data/preprocess/attrs_hk_raw.txt'
         self.emb_only = emb_only
         self.with_emb = with_emb
         self.t_th = t_th
         self.d_th = d_th
         self.pairs_file = '../data/pairs.txt'
 
+    
+    
     def check_attr(self,idx):
-        f = open('C:/Users/arthur/Desktop/ne/HK/HN/hk/data/doublelink_hk.txt','r',encoding='utf-8')
+        f = open(self.link_file,'r',encoding='utf-8')
         pos = []
         for line in f:
             line = line.split(' ')
@@ -65,7 +67,7 @@ class FeatureMaker:
          
         return 0
     def build_feature(self):
-        id_map,emb = self.get_emb()
+        # id_map,emb = self.get_emb()
         no_emb = 0
         
 
@@ -84,7 +86,7 @@ class FeatureMaker:
         # onehot = ['status','gender','place']
        
         if not self.with_emb:
-            self.out_file = '../train/feature_attr_only_hk.txt'
+            self.out_file = '../data/train/feature_attr_only_hk.txt'
             self.train_file = '../train/train_attr_only_hk_{}_{}.txt'.format(self.t_th,self.d_th)
         if  self.emb_only:
             self.out_file = '../train/feature_emb_only_hk.txt'
@@ -143,7 +145,8 @@ class FeatureMaker:
                 id = 'p' + line[0].split('_')[-1]
                 # print(id)
                 try:
-                    embeddings = emb[id_map[id]]
+                    # embeddings = emb[id_map[id]]
+                    embedding = 0
                 except:
                     no_emb += 1
                     embeddings = [0 for _ in range(32)]
@@ -524,8 +527,8 @@ class FeatureMaker:
         id_map,emb = self.get_emb()
 
         res = {}
-        from sklearn.externals import joblib
-        clf=joblib.load('rf_hk.pkl')
+        # from sklearn.externals import joblib
+        # clf=joblib.load('rf_hk.pkl')
 
         p2l = self.if_meet()
         print(locals)
@@ -756,14 +759,14 @@ if __name__ =='__main__':
     # f.make_train_2(1)
 
     # # attr only
-    # f = FeatureMaker(with_emb=False,emb_only=False)
-    # f.build_feature()
+    f = FeatureMaker(with_emb=False,emb_only=False)
+    f.build_feature()
     # f.make_train_2(1)
-    f = FeatureMaker(with_emb=True,emb_only=True)
+    # f = FeatureMaker(with_emb=True,emb_only=True)
     # f.check_attr(0)
     # f.check_attr(1)
     # f.check_attr(2)
-    f.check_local()
+    # f.check_local()
     # f.make_pairs(1)
     # # for sx,sy in [[1,1],[2,2],[3,3],[10,10]]:
     # for sx,sy in [[3,3]]:

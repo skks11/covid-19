@@ -10,8 +10,8 @@ class evaluater:
         self.emb = {}
         self.positive = []
         self.negtive = []
-        self.patient_num = 1017
-        self.location_num = 2388
+        self.patient_num = 2000
+        self.location_num = 2790
         self.attr = {}
         
 
@@ -184,17 +184,17 @@ class predictor:
 
         x_train,x_test,y_train,y_test = train_test_split(train_x,train_y,test_size=test_size,random_state=100,stratify=train_y,shuffle=True)
         
-        
+         
         return x_train,x_test,y_train,y_test
     
-    def plotPR(self,classifier,x_test,y_test,preds):
-        from sklearn.metrics import precision_recall_curve
-        from sklearn.metrics import plot_precision_recall_curve
-        import matplotlib.pyplot as plt
+    # def plotPR(self,classifier,x_test,y_test,preds):
+    #     from sklearn.metrics import precision_recall_curve
+    #     # from sklearn.metrics import plot_precision_recall_curve
+    #     import matplotlib.pyplot as plt
         # from sklearn.metrics import average_precision_score
         # average_precision = average_precision_score(y_test, preds)
 
-        disp = plot_precision_recall_curve(classifier, x_test, y_test)
+        # disp = plot_precision_recall_curve(classifier, x_test, y_test)
 
         # disp.ax_.set_title(self.train_file+' '
                 #    'AP={0:0.2f}'.format(0.88))
@@ -203,6 +203,7 @@ class predictor:
         from sklearn.linear_model import LogisticRegression
         from sklearn.metrics import accuracy_score,f1_score,classification_report,precision_recall_curve
         from sklearn.model_selection import train_test_split
+        
         
         pairs = []
         f = open('../data/train/mapping.txt','r',encoding='utf-8')
@@ -213,6 +214,7 @@ class predictor:
 
         train_x = []
         train_y = []
+        
         f = open(self.train_file,'r',encoding='utf-8')
         for line in f:
             line = line.strip().split(' ')
@@ -285,8 +287,7 @@ class predictor:
         # f.write('avg acc: {}\n'.format(acc/times))
         f.close()
 
-
-        
+    
 
     def score(self,y_true,pred):
         from sklearn.metrics import precision_score, recall_score, accuracy_score
@@ -299,6 +300,50 @@ class predictor:
         print("auc: %s"% auc)
         return auc
     
+    def SVM_train(self):
+        from sklearn.linear_model import LogisticRegression
+        from sklearn import svm
+        from sklearn.metrics import accuracy_score,f1_score,classification_report,precision_recall_curve
+        # train_x,train_y = self.load_data()
+        times = 1
+        acc = 0
+        f1 = 0
+        f = open('../res/acc.txt','a',encoding='utf-8')
+        
+        for _ in range(times):
+            train_x,test_x,train_y,test_y = self.load_data()
+            # lr= LogisticRegression(class_weight='balanced')
+            lr = svm.SVC()
+            lr.fit(train_x,train_y)
+            pred = lr.predict(test_x)
+            # prob = lr.predict_proba(test_x)
+            
+        
+            acc += accuracy_score(test_y,pred)
+            f1 += f1_score(test_y,pred)
+        
+        
+        print('avg acc: {}'.format(acc/times))
+        print(classification_report(test_y,pred))
+
+        # f.write(self.train_file+'\n')   
+        # f.write('avg acc: {}\n'.format(acc/times))
+        f.close()
+
+
+        ############## for validation
+        valid = []
+        f = open('../data/train/valid.txt','r',encoding='utf-8')
+        for line in f:
+            line = line.strip().split(' ')
+            line = list(map(lambda x: float(x),line))  
+            valid.append(line)
+        f.close()
+        valid_y = [1 for _ in range(len(valid))]
+        valid_pred = lr.predict(valid)
+        print('FOR VALIDATION')
+        print(classification_report(valid_y,valid_pred))
+
     def LR_train(self):
         from sklearn.linear_model import LogisticRegression
         from sklearn.metrics import accuracy_score,f1_score,classification_report,precision_recall_curve
@@ -311,6 +356,7 @@ class predictor:
         for _ in range(times):
             train_x,test_x,train_y,test_y = self.load_data()
             lr= LogisticRegression(class_weight='balanced')
+            # lr= LogisticRegression()
             lr.fit(train_x,train_y)
             pred = lr.predict(test_x)
             prob = lr.predict_proba(test_x)
@@ -319,23 +365,49 @@ class predictor:
             acc += accuracy_score(test_y,pred)
             f1 += f1_score(test_y,pred)
         
-        # self.plotPR(lr,test_x,test_y,prob[:,1:])
-        # precision, recall, _ = precision_recall_curve(test_y,prob[:,1:])
-        # import matplotlib.pyplot as plt
-        # plt.plot(recall,precision)
-        # plt.xlabel('recall')
-        # plt.ylabel('precision')
-        # plt.title('PR Curve of '+self.train_file)
-        # plt.show()
-        # print(self.train_file)   
+        
         print('avg acc: {}'.format(acc/times))
-
-
         print(classification_report(test_y,pred))
+
         # f.write(self.train_file+'\n')   
         # f.write('avg acc: {}\n'.format(acc/times))
         f.close()
 
+
+        ############## for validation
+        valid = []
+        f = open('../data/train/valid.txt','r',encoding='utf-8')
+        for line in f:
+            line = line.strip().split(' ')
+            line = list(map(lambda x: float(x),line))  
+            valid.append(line)
+        f.close()
+        valid_y = [1 for _ in range(len(valid))]
+        valid_pred = lr.predict(valid)
+        print('FOR VALIDATION')
+        print(classification_report(valid_y,valid_pred))
+
+        # 检查得分低的valid pairs的编号
+        pos = []
+        f = open('../data/preprocess/validset.txt','r',encoding='utf-8')
+        for line in f:
+            line = line.strip().split()
+            if int(line[0]) > 2000 or int(line[0]) > 2000:
+                continue
+            pos.append([int(line[0]),int(line[1])])
+        f.close()
+        valid_prob = lr.predict_proba(valid)
+        print(valid_prob[:5])
+        
+        for idx in np.argsort(valid_prob[:,1])[-5:]:
+            print(valid_prob[idx])
+            print(pos[idx])
+            # print(valid[idx])
+            
+        # print(pos[np.argmin(valid_prob[:,1])])
+
+
+        
 if __name__ == '__main__':
     # 
     
@@ -355,12 +427,13 @@ if __name__ == '__main__':
     # emb + attr
     datasets = ['../data/train/node2vec_with_attr.txt','../data/train/LINE_with_attr.txt','../data/train/metapath2vec_with_attr.txt',
     '../data/train/HIN2vec_with_attr.txt','../data/train/HeGANdis_with_attr.txt','../data/train/HeGANgen_with_attr.txt','../data/train/HeGANmean_with_attr.txt']
-    for dataset in [datasets[-1],datasets[2]]:
+    for dataset in [datasets[2]]:
     # for dataset in datasets:
         print('processing '+dataset)
         P = predictor(dataset)
-        # P.LR_train()
-        P.recall_at_topk()
+        P.LR_train()
+        # P.SVM_train()
+        # P.recall_at_topk()
         
 
     # attr only
