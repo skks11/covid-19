@@ -349,7 +349,9 @@ class CovidPreprocess:
                 #对于没有坐标的 跳过
                 continue
                 # print(address)
-            for date in range(end,end+1):
+            
+            ###  只保留一天
+            for date in range(satrt,end):
                 if str(date)+' '+address not in places:
                     places[str(date)+' '+address] = [cnt,lng,lat]  
                     p2l[pid].append(cnt)
