@@ -16,13 +16,26 @@ class preprocesser:
         self.patient_num = 2000
         self.location_num = 2790
         self.imported = []   #输入案例
+        self.local = []
+        self.local2 = []    #没有传染关系的local病例
         self.date = {}          #确诊日期
         self.num_neg = 5
+
+    # def get_local(self):
     
-    def get_import(self):
-        f = open('../data/import.txt','r',encoding='utf-8')
+    def get_type(self):
+        f = open('../data/preprocess/node_type.txt','r',encoding='utf-8')
         for line in f:
-            self.imported.append(int(line.strip()))
+            line = line.strip().split()
+            if line[-1] == 'classification_imported':
+                self.imported.append(int(line[0]))
+            if line[-1] == 'classification_local':
+                self.local.append(int(line[0]))
+            if line[-1] == 'classification_local2':
+                self.local2.append(int(line[0]))
+
+            
+        f.close()
     
     def get_date(self):
         f = open('../data/train/feature_attr_only_hk.txt','r',encoding='utf-8')
@@ -134,7 +147,7 @@ class preprocesser:
 
     def get_neg(self,full=False):
         print('negative sampling......')
-        self.get_import()
+        self.get_type()
         self.get_date()
         if not full:
             

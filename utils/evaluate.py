@@ -343,6 +343,14 @@ class predictor:
         valid_pred = lr.predict(valid)
         print('FOR VALIDATION')
         print(classification_report(valid_y,valid_pred))
+        
+    def predict_local_cases(self):
+        from sklearn.linear_model import LogisticRegression
+        from sklearn.metrics import accuracy_score,f1_score,classification_report,precision_recall_curve
+
+    def baseline(self):
+        from sklearn.linear_model import LogisticRegression
+        from sklearn.metrics import accuracy_score,f1_score,classification_report,precision_recall_curve
 
     def LR_train(self):
         from sklearn.linear_model import LogisticRegression
