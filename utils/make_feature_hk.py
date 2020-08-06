@@ -217,12 +217,20 @@ class FeatureMaker:
             month = 31
         elif month == '03':
             month = 60
-        else:
+        elif month == '04':
             month = 91
+        elif month == '05':
+            month = 121
+        elif month == '06':
+            month = 152
+        elif month == '07':
+            month = 182
+        else:
+            month = 213
         if day[0] == '0':
             day = day[1]
         return month + int(day)
-
+        
     # 将日期转化为数字
     def get_time(self,time):
         try:

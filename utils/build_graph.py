@@ -82,11 +82,22 @@ class CovidPreprocess:
             month = 31
         elif month == '03':
             month = 60
-        else:
+        elif month == '04':
             month = 91
+        elif month == '05':
+            month = 121
+        elif month == '06':
+            month = 152
+        elif month == '07':
+            month = 182
+        else:
+            month = 213
         if day[0] == '0':
             day = day[1]
         return month + int(day)
+
+    
+
 
     def google(self,address):
         import json
@@ -94,6 +105,12 @@ class CovidPreprocess:
         import requests
         import time
         time.sleep(0.1)
+        blks = ['Central and Western','中西區','Eastern','東區','Southern','南區','Wan Chai','灣仔區',
+            'Sham Shui Po','深水埗區','Kowloon City','九龍城區','Kwun Tong','觀塘區',
+            'Wong Tai Sin','黃大仙區','Yau Tsim Mong','油尖旺區','Islands','離島區','Kwai Tsing','葵青區',
+            'North','北區','Sai Kung','西貢區','Sha Tin','沙田區','Tai Po','大埔區',
+            'Tsuen Wan','荃灣區','Tuen Mun','屯門區','Yuen Long','元朗區',
+            '沙田','黃大仙','觀塘','九龍城','油尖旺','元朗','屯門','大埔','西貢','深水埗','葵青','灣仔','離島','荃灣','東區','南區','北區','中西區']
         my_key = 'AIzaSyDkbWtwkaKQsI03QqGG1tt6y8Z3SApWf8Y'
         url = 'https://maps.googleapis.com/maps/api/geocode/json?'
         
@@ -102,6 +119,20 @@ class CovidPreprocess:
         req = requests.get(url)
 
         temp = json.loads(req.text)
+
+        block = 'no block'
+        flag = False
+        for item in temp['results'][0]['address_components']:
+            # print(item['types'])
+            if item['long_name'] in blks:
+                flag = True
+                block = item['long_name']
+
+        if not flag:
+            for item in temp['results'][0]['address_components']:
+                # print(item['types'])
+                if item['types'] == ['neighborhood', 'political']:
+                    block = item['long_name']
         # print(temp)
         # print(temp)
         try:
@@ -109,15 +140,15 @@ class CovidPreprocess:
             lng = temp['results'][0]["geometry"]["location"]['lng']
             if lat < 22 or lat>23 or lng<113 or lng >115:
                 print('{} not in hk!'.format(address))
-                return 0,0
-            return (lng,lat)
+                return 0,0,0
+            return (lng,lat,block)
         except:
             print('google failed')
             print(temp)
-            return 0,0
+            return 0,0,0
 
     
-            
+          
     # def get_p2l(self):
     #     # get patient 2 loction file (patient-id location-id weight)
     #     p2l_ori = {}
@@ -265,7 +296,7 @@ class CovidPreprocess:
     def get_locations_3(self):
         # 删除skip中的地址
         # get location file  (location_id name time lng lat)
-        f = open('../data/preprocess/places_hk.txt','r',encoding='utf-8')
+        f = open('../data/preprocess/3000/places_hk.txt','r',encoding='utf-8')
         p2l = {}
         places = {}
         cnt = 1
@@ -315,7 +346,8 @@ class CovidPreprocess:
                     start = dates[0]-3 if dates[0] !=0 else end-3           
                 else:
                     end = dates[0] if dates[0] != 0 else dates[1]
-                    start = end - 3       #按发病前3天开始有传染性
+                    start = end - 1       ##仅保留一天 
+                    #按发病前3天开始有传染性
 
             # elif 'action_住宿' in line:
             #     end = dates[1] if dates[1] != 0 else dates[0]
@@ -338,10 +370,10 @@ class CovidPreprocess:
                       
             for _ in range(10):
                 try:
-                    lng,lat = self.google(address)
+                    lng,lat,block = self.google(address)
                     break
                 except:
-                    lng,lat = 0,0
+                    lng,lat,block = 0,0,0
 
             
             if lng == 0 and lat == 0:
@@ -351,17 +383,17 @@ class CovidPreprocess:
                 # print(address)
             
             ###  只保留一天
-            for date in range(satrt,end):
+            for date in range(start,end):
                 if str(date)+' '+address not in places:
-                    places[str(date)+' '+address] = [cnt,lng,lat]  
+                    places[str(date)+' '+address] = [cnt,lng,lat,block]  
                     p2l[pid].append(cnt)
                     cnt += 1 
                 else:
                     p2l[pid].append(places[str(date)+' '+address][0])
 
         
-
-        f = open('../data/preprocess/p2l_new.txt','w',encoding='utf-8')
+        # p2l
+        f = open('../data/preprocess/3000/p2l_new.txt','w',encoding='utf-8')
         # print(p2l)
         for key,value in p2l.items():
             if len(value) > 0:
@@ -369,7 +401,7 @@ class CovidPreprocess:
                     f.write(key + ' ' + str(lid)+'\n')
         f.close()
 
-        f = open('../data/preprocess/places_hk_gps_new.txt','w',encoding='utf-8')
+        f = open('../data/preprocess/3000/places_hk_gps_with_attr.txt','w',encoding='utf-8')
         for key,value in places.items():
             f.write(key + ' ')
             for item in value:
@@ -653,9 +685,12 @@ if __name__ == "__main__":
 
 
     covid = CovidPreprocess(3,3)
-    # covid.get_locations_3()
+    # covid.google('威爾斯親王醫院')
+    # covid.google('華富邨華翠樓')
+    # covid.google('雲邨長波樓')
+    covid.get_locations_3()
     # covid.get_p2p()
     # covid.get_l2l()
     # covid = CovidPreprocess(10,10)
     # covid.get_l2l()
-    covid.get_validset()
+    # covid.get_validset()

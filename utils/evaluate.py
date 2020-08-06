@@ -5,13 +5,14 @@ class evaluater:
     def __init__(self,emb_file):
         self.l2l = '../data/l2l.txt'
         self.p2l = '../data/p2l.txt'
+        self.ptol = {}
         self.doublelink = '../data/doublelink_hk.txt'
         self.emb_file = emb_file
         self.emb = {}
         self.positive = []
         self.negtive = []
         self.patient_num = 2000
-        self.location_num = 2790
+        self.location_num = 8233
         self.attr = {}
         
 
@@ -168,11 +169,17 @@ class predictor:
     def __init__(self,train_file):
         self.train_file = train_file
 
-    def load_data(self,test_size=0.5):
+    def load_data(self,baseline=False,test_size=0.5):
         from sklearn.model_selection import train_test_split
         train_x = []
         train_y = []
-        f = open(self.train_file,'r',encoding='utf-8')
+
+        if baseline:
+            input_file = '../data/train/metapath2vec_baseline.txt'
+        else:
+            input_file = self.train_file
+        
+        f = open(input_file,'r',encoding='utf-8')
         for line in f:
             line = line.strip().split(' ')
             line = list(map(lambda x: float(x),line))
@@ -313,9 +320,10 @@ class predictor:
         for _ in range(times):
             train_x,test_x,train_y,test_y = self.load_data()
             # lr= LogisticRegression(class_weight='balanced')
-            lr = svm.SVC()
-            lr.fit(train_x,train_y)
-            pred = lr.predict(test_x)
+            clf = svm.SVC(probability=True)
+            clf.fit(train_x,train_y)
+            pred = clf.predict(test_x)
+            
             # prob = lr.predict_proba(test_x)
             
         
@@ -330,27 +338,108 @@ class predictor:
         # f.write('avg acc: {}\n'.format(acc/times))
         f.close()
 
+        import pickle
+        # 保存模型
+        output = open("../model/svm.pkl", 'wb')
+        pickle.dump(clf, output)  
+        output.close()
 
         ############## for validation
-        valid = []
-        f = open('../data/train/valid.txt','r',encoding='utf-8')
+        # valid = []
+        # f = open('../data/train/valid.txt','r',encoding='utf-8')
+        # for line in f:
+        #     line = line.strip().split(' ')
+        #     line = list(map(lambda x: float(x),line))  
+        #     valid.append(line)
+        # f.close()
+        # valid_y = [1 for _ in range(len(valid))]
+        # valid_pred = lr.predict(valid)
+        # print('FOR VALIDATION')
+        # print(classification_report(valid_y,valid_pred))
+
+
+        ############## for predicting local cases
+
+    def load_p2l(self):
+        print('loading p2l......')
+        ptol = {}
+        f = open('../data/p2l.txt','r',encoding='utf-8')
         for line in f:
-            line = line.strip().split(' ')
-            line = list(map(lambda x: float(x),line))  
-            valid.append(line)
+            line = line.strip().split()
+            if int(line[0]) in ptol:
+                ptol[int(line[0])].append(int(line[1]))
+            else:
+                ptol[int(line[0])] = [int(line[1])]
+        for i in range(1,2001):
+            if i not in ptol:
+                ptol[i] = []
         f.close()
-        valid_y = [1 for _ in range(len(valid))]
-        valid_pred = lr.predict(valid)
-        print('FOR VALIDATION')
-        print(classification_report(valid_y,valid_pred))
-        
+        return ptol
+
     def predict_local_cases(self):
-        from sklearn.linear_model import LogisticRegression
-        from sklearn.metrics import accuracy_score,f1_score,classification_report,precision_recall_curve
+        import pickle
+        model = open("../model/svm.pkl", 'rb')
+        svm = pickle.load(model)
+        model.close()
+
+        ptol = self.load_p2l()
+        print(svm.classes_)
+        topredict = []
+        maps = []
+        f = open('../data/train/metapath2vec_topredict.txt','r',encoding='utf-8')
+        for line in f:
+            line = line.strip().split()
+            tmp = list(map(lambda x:float(x),line))
+            topredict.append(tmp[:-2])
+            maps.append(tmp[-2:])
+
+        prob = svm.predict_proba(topredict)
+        
+        predict = []
+        for i in range(len(prob)):
+            predict.append([prob[i][1],maps[i][0],maps[i][1]])
+
+        predict = sorted(predict,key=lambda x: x[0],reverse=True)
+        
+        topk = 1000
+        for i in range(topk):
+            p1 = predict[i][1]
+            p2 = predict[i][2]
+            common_location = len(set(ptol[p1]) & set(ptol[p2]))
+            if common_location > 0 :
+                print(p1,p2)
+        
+
+
+
+            
+        
 
     def baseline(self):
-        from sklearn.linear_model import LogisticRegression
-        from sklearn.metrics import accuracy_score,f1_score,classification_report,precision_recall_curve
+        from sklearn.metrics import classification_report
+        train_x,test_x,train_y,test_y = self.load_data(baseline=True)
+        pred = []
+        for data in test_x:
+            if data[2] > 0:
+                pred.append(1)    #有共同地点
+                continue
+
+            if data[3] > 14:
+                pred.append(0)    #间隔超过两周
+                continue
+
+            if data[0] > 0.5:
+                pred.append(1)
+                continue
+            
+            if data[0] > 0.11 and data[3] <=3:  #emb similarity
+                pred.append(1)
+            elif data[1] > 0.6 :     # attr similarity
+                pred.append(1)
+            else:
+                pred.append(0)
+
+        print(classification_report(test_y,pred))
 
     def LR_train(self):
         from sklearn.linear_model import LogisticRegression
@@ -439,10 +528,13 @@ if __name__ == '__main__':
     # for dataset in datasets:
         print('processing '+dataset)
         P = predictor(dataset)
-        P.LR_train()
+        # P.LR_train()
+        P.baseline()
         # P.SVM_train()
+        # P.predict_local_cases()
         # P.recall_at_topk()
-        
+
+    
 
     # attr only
     # datasets = ['../data/train/node2vec_attr_only.txt','../data/train/LINE_attr_only.txt','../data/train/metapath2vec_attr_only.txt',
